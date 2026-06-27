@@ -21,6 +21,10 @@ const client = new MongoClient(uri, {
 const run = async () => {
   try {
     await client.connect();
+
+    const database = client.db("ebook_platform");
+    const collection = database.collection("books");
+
     await client.db("admin").command({ ping: 1 });
     console.log(
       "Pinged your deployment. You successfully connected to MongoDB!",
