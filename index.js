@@ -131,9 +131,9 @@ const verifyRole = (roles) => {
   };
 };
 
-// app.get("/", (req, res) => {
-//   res.send("Fable Ebook Platform Server is running...");
-// });
+app.get("/", (req, res) => {
+  res.send("Fable Ebook Platform Server is running...");
+});
 
 // app.post("/api/auth/register", async (req, res) => {
 //   try {
