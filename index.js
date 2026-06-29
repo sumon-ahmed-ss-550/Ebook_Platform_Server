@@ -308,15 +308,15 @@ app.post("/api/create-checkout-session", verifyToken, async (req, res) => {
   }
 });
 
-// app.get("/api/my-library", verifyToken, async (req, res) => {
-//   try {
-//     const userId = req.decoded.id;
-//     const purchasedBooks = await ordersCollection.find({ userId }).toArray();
-//     res.send(purchasedBooks);
-//   } catch (error) {
-//     res.status(500).send({ message: error.message });
-//   }
-// });
+app.get("/api/my-library", verifyToken, async (req, res) => {
+  try {
+    const userId = req.decoded.id;
+    const purchasedBooks = await ordersCollection.find({ userId }).toArray();
+    res.send(purchasedBooks);
+  } catch (error) {
+    res.status(500).send({ message: error.message });
+  }
+});
 
 app.listen(port, () => {
   console.log(`Fable server listening on port ${port}`);
