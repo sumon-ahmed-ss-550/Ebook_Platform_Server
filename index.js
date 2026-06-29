@@ -135,34 +135,34 @@ app.get("/", (req, res) => {
   res.send("Fable Ebook Platform Server is running...");
 });
 
-// app.post("/api/auth/register", async (req, res) => {
-//   try {
-//     const { name, email, password, role } = req.body;
-//     const existingUser = await usersCollection.findOne({ email });
-//     if (existingUser) {
-//       return res.status(400).send({ message: "Email already exists" });
-//     }
+app.post("/api/auth/register", async (req, res) => {
+  try {
+    const { name, email, password, role } = req.body;
+    const existingUser = await usersCollection.findOne({ email });
+    if (existingUser) {
+      return res.status(400).send({ message: "Email already exists" });
+    }
 
-//     const hashedPassword = await bcrypt.hash(password, 10);
-//     const newUser = {
-//       name,
-//       email,
-//       password: hashedPassword,
-//       role: role || "Reader",
-//       createdAt: new Date(),
-//     };
-//     const result = await usersCollection.insertOne(newUser);
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const newUser = {
+      name,
+      email,
+      password: hashedPassword,
+      role: role || "Reader",
+      createdAt: new Date(),
+    };
+    const result = await usersCollection.insertOne(newUser);
 
-//     const token = jwt.sign(
-//       { id: result.insertedId, email, role: newUser.role },
-//       jwtSecret,
-//       { expiresIn: "7d" },
-//     );
-//     res.status(201).send({ token, user: { name, email, role: newUser.role } });
-//   } catch (error) {
-//     res.status(500).send({ message: error.message });
-//   }
-// });
+    const token = jwt.sign(
+      { id: result.insertedId, email, role: newUser.role },
+      jwtSecret,
+      { expiresIn: "7d" },
+    );
+    res.status(201).send({ token, user: { name, email, role: newUser.role } });
+  } catch (error) {
+    res.status(500).send({ message: error.message });
+  }
+});
 
 // app.post("/api/auth/login", async (req, res) => {
 //   try {
