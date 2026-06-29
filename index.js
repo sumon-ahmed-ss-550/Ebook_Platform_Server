@@ -103,33 +103,33 @@ const run = async () => {
 };
 run().catch(console.dir);
 
-// const verifyToken = (req, res, next) => {
-//   const authHeader = req.headers.authorization;
-//   if (!authHeader || !authHeader.startsWith("Bearer ")) {
-//     return res.status(401).send({ message: "Unauthorized access" });
-//   }
-//   const token = authHeader.split(" ")[1];
+const verifyToken = (req, res, next) => {
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    return res.status(401).send({ message: "Unauthorized access" });
+  }
+  const token = authHeader.split(" ")[1];
 
-//   jwt.verify(token, jwtSecret, (err, decoded) => {
-//     if (err) {
-//       return res.status(403).send({ message: "Forbidden access" });
-//     }
-//     req.decoded = decoded;
-//     next();
-//   });
-// };
+  jwt.verify(token, jwtSecret, (err, decoded) => {
+    if (err) {
+      return res.status(403).send({ message: "Forbidden access" });
+    }
+    req.decoded = decoded;
+    next();
+  });
+};
 
-// const verifyRole = (roles) => {
-//   return (req, res, next) => {
-//     const userRole = req.decoded.role;
-//     if (!roles.includes(userRole)) {
-//       return res
-//         .status(403)
-//         .send({ message: "Forbidden: You do not have permission" });
-//     }
-//     next();
-//   };
-// };
+const verifyRole = (roles) => {
+  return (req, res, next) => {
+    const userRole = req.decoded.role;
+    if (!roles.includes(userRole)) {
+      return res
+        .status(403)
+        .send({ message: "Forbidden: You do not have permission" });
+    }
+    next();
+  };
+};
 
 // app.get("/", (req, res) => {
 //   res.send("Fable Ebook Platform Server is running...");
