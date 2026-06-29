@@ -191,20 +191,20 @@ app.post("/api/auth/login", async (req, res) => {
   }
 });
 
-// app.post(
-//   "/api/ebooks",
-//   verifyToken,
-//   verifyRole(["Writer", "Admin"]),
-//   async (req, res) => {
-//     try {
-//       const bookData = req.body;
-//       const result = await booksCollection.insertOne(bookData);
-//       res.status(201).send(result);
-//     } catch (error) {
-//       res.status(500).send({ message: error.message });
-//     }
-//   },
-// );
+app.post(
+  "/api/ebooks",
+  verifyToken,
+  verifyRole(["Writer", "Admin"]),
+  async (req, res) => {
+    try {
+      const bookData = req.body;
+      const result = await booksCollection.insertOne(bookData);
+      res.status(201).send(result);
+    } catch (error) {
+      res.status(500).send({ message: error.message });
+    }
+  },
+);
 
 // app.get("/api/ebooks", async (req, res) => {
 //   try {
