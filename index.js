@@ -256,57 +256,57 @@ app.post(
   },
 );
 
-// app.post("/api/create-checkout-session", verifyToken, async (req, res) => {
-//   try {
-//     const { bookId } = req.body;
-//     const userEmail = req.decoded.email;
-//     const userId = req.decoded.id;
+app.post("/api/create-checkout-session", verifyToken, async (req, res) => {
+  try {
+    const { bookId } = req.body;
+    const userEmail = req.decoded.email;
+    const userId = req.decoded.id;
 
-//     const book = await booksCollection.findOne({ _id: new ObjectId(bookId) });
-//     if (!book) {
-//       return res.status(404).send({ message: "Ebook not found" });
-//     }
+    const book = await booksCollection.findOne({ _id: new ObjectId(bookId) });
+    if (!book) {
+      return res.status(404).send({ message: "Ebook not found" });
+    }
 
-//     const alreadyPurchased = await ordersCollection.findOne({ userId, bookId });
-//     if (alreadyPurchased) {
-//       return res
-//         .status(400)
-//         .send({ message: "You have already purchased this ebook" });
-//     }
+    const alreadyPurchased = await ordersCollection.findOne({ userId, bookId });
+    if (alreadyPurchased) {
+      return res
+        .status(400)
+        .send({ message: "You have already purchased this ebook" });
+    }
 
-//     const session = await stripe.checkout.sessions.create({
-//       payment_method_types: ["card"],
-//       line_items: [
-//         {
-//           price_data: {
-//             currency: "usd",
-//             product_data: {
-//               name: book.title,
-//               description: book.description || `Purchase ${book.title}`,
-//               images: book.image ? [book.image] : [],
-//             },
-//             unit_amount: Math.round(book.price * 100), // সেন্টে কনভার্ট (যেমন: $14.99 -> 1499)
-//           },
-//           quantity: 1,
-//         },
-//       ],
-//       mode: "payment",
-//       success_url: `${process.env.CLIENT_URL}/dashboard/library?success=true`,
-//       cancel_url: `${process.env.CLIENT_URL}/ebook/${bookId}?canceled=true`,
-//       metadata: {
-//         userId: userId,
-//         userEmail: userEmail,
-//         bookId: bookId,
-//         bookTitle: book.title,
-//         price: book.price.toString(),
-//       },
-//     });
+    const session = await stripe.checkout.sessions.create({
+      payment_method_types: ["card"],
+      line_items: [
+        {
+          price_data: {
+            currency: "usd",
+            product_data: {
+              name: book.title,
+              description: book.description || `Purchase ${book.title}`,
+              images: book.image ? [book.image] : [],
+            },
+            unit_amount: Math.round(book.price * 100), // সেন্টে কনভার্ট (যেমন: $14.99 -> 1499)
+          },
+          quantity: 1,
+        },
+      ],
+      mode: "payment",
+      success_url: `${process.env.CLIENT_URL}/dashboard/library?success=true`,
+      cancel_url: `${process.env.CLIENT_URL}/ebook/${bookId}?canceled=true`,
+      metadata: {
+        userId: userId,
+        userEmail: userEmail,
+        bookId: bookId,
+        bookTitle: book.title,
+        price: book.price.toString(),
+      },
+    });
 
-//     res.send({ id: session.id, url: session.url });
-//   } catch (error) {
-//     res.status(500).send({ message: error.message });
-//   }
-// });
+    res.send({ id: session.id, url: session.url });
+  } catch (error) {
+    res.status(500).send({ message: error.message });
+  }
+});
 
 // app.get("/api/my-library", verifyToken, async (req, res) => {
 //   try {
