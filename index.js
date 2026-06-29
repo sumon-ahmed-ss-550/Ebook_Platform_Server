@@ -164,32 +164,32 @@ app.post("/api/auth/register", async (req, res) => {
   }
 });
 
-// app.post("/api/auth/login", async (req, res) => {
-//   try {
-//     const { email, password } = req.body;
-//     const user = await usersCollection.findOne({ email });
-//     if (!user) {
-//       return res.status(404).send({ message: "User not found" });
-//     }
+app.post("/api/auth/login", async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    const user = await usersCollection.findOne({ email });
+    if (!user) {
+      return res.status(404).send({ message: "User not found" });
+    }
 
-//     const isPasswordValid = await bcrypt.compare(password, user.password);
-//     if (!isPasswordValid) {
-//       return res.status(401).send({ message: "Invalid credentials" });
-//     }
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+    if (!isPasswordValid) {
+      return res.status(401).send({ message: "Invalid credentials" });
+    }
 
-//     const token = jwt.sign(
-//       { id: user._id, email: user.email, role: user.role },
-//       jwtSecret,
-//       { expiresIn: "7d" },
-//     );
-//     res.send({
-//       token,
-//       user: { name: user.name, email: user.email, role: user.role },
-//     });
-//   } catch (error) {
-//     res.status(500).send({ message: error.message });
-//   }
-// });
+    const token = jwt.sign(
+      { id: user._id, email: user.email, role: user.role },
+      jwtSecret,
+      { expiresIn: "7d" },
+    );
+    res.send({
+      token,
+      user: { name: user.name, email: user.email, role: user.role },
+    });
+  } catch (error) {
+    res.status(500).send({ message: error.message });
+  }
+});
 
 // app.post(
 //   "/api/ebooks",
