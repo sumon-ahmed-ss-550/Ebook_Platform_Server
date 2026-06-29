@@ -229,32 +229,32 @@ app.get("/api/ebooks/:id", async (req, res) => {
   }
 });
 
-// app.post(
-//   "/api/upload-image",
-//   verifyToken,
-//   verifyRole(["Writer", "Admin"]),
-//   upload.single("image"),
-//   async (req, res) => {
-//     try {
-//       if (!req.file) {
-//         return res.status(400).send({ message: "No image file provided" });
-//       }
+app.post(
+  "/api/upload-image",
+  verifyToken,
+  verifyRole(["Writer", "Admin"]),
+  upload.single("image"),
+  async (req, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).send({ message: "No image file provided" });
+      }
 
-//       const form = new FormData();
-//       form.append("image", req.file.buffer.toString("base64"));
+      const form = new FormData();
+      form.append("image", req.file.buffer.toString("base64"));
 
-//       const imgbbResponse = await axios.post(
-//         `https://api.imgbb.com/1/upload?key=${process.env.IMGBB_API_KEY}`,
-//         form,
-//         { headers: form.getHeaders() },
-//       );
+      const imgbbResponse = await axios.post(
+        `https://api.imgbb.com/1/upload?key=${process.env.IMGBB_API_KEY}`,
+        form,
+        { headers: form.getHeaders() },
+      );
 
-//       res.send({ imageUrl: imgbbResponse.data.data.url });
-//     } catch (error) {
-//       res.status(500).send({ message: error.message });
-//     }
-//   },
-// );
+      res.send({ imageUrl: imgbbResponse.data.data.url });
+    } catch (error) {
+      res.status(500).send({ message: error.message });
+    }
+  },
+);
 
 // app.post("/api/create-checkout-session", verifyToken, async (req, res) => {
 //   try {
