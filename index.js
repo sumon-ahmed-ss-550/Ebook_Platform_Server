@@ -206,28 +206,28 @@ app.post(
   },
 );
 
-// app.get("/api/ebooks", async (req, res) => {
-//   try {
-//     const result = await booksCollection.find({}).toArray();
-//     res.send(result);
-//   } catch (error) {
-//     res.status(500).send({ message: error.message });
-//   }
-// });
+app.get("/api/ebooks", async (req, res) => {
+  try {
+    const result = await booksCollection.find({}).toArray();
+    res.send(result);
+  } catch (error) {
+    res.status(500).send({ message: error.message });
+  }
+});
 
-// app.get("/api/ebooks/:id", async (req, res) => {
-//   try {
-//     const id = req.params.id;
-//     const query = { _id: new ObjectId(id) };
-//     const result = await booksCollection.findOne(query);
-//     if (!result) {
-//       return res.status(404).send({ message: "Ebook not found" });
-//     }
-//     res.send(result);
-//   } catch (error) {
-//     res.status(500).send({ message: error.message });
-//   }
-// });
+app.get("/api/ebooks/:id", async (req, res) => {
+  try {
+    const id = req.params.id;
+    const query = { _id: new ObjectId(id) };
+    const result = await booksCollection.findOne(query);
+    if (!result) {
+      return res.status(404).send({ message: "Ebook not found" });
+    }
+    res.send(result);
+  } catch (error) {
+    res.status(500).send({ message: error.message });
+  }
+});
 
 // app.post(
 //   "/api/upload-image",
