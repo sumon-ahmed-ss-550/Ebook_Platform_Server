@@ -19,7 +19,6 @@ const jwtSecret = process.env.JWT_SECRET || "fable_secret_key_123";
 // Middleware
 app.use(cors());
 
-// Stripe Webhook-এর জন্য raw body প্রয়োজন, তাই express.json() এর পূর্বে এটি হ্যান্ডেল করতে হবে
 app.post(
   "/api/webhook",
   express.raw({ type: "application/json" }),
@@ -42,7 +41,6 @@ app.post(
     if (event.type === "checkout.session.completed") {
       const session = event.data.object;
 
-      // পেমেন্ট সফল হলে অর্ডার ডাটাবেজে সেভ করুন
       const orderInfo = {
         userId: session.metadata.userId,
         userEmail: session.metadata.userEmail,
@@ -66,10 +64,8 @@ app.post(
   },
 );
 
-// অন্যান্য সাধারণ রাউটের জন্য JSON পার্সার মিডলওয়্যার
 app.use(express.json());
 
-// Multer Setup (Memory Storage for imgBB upload)
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
 
@@ -107,228 +103,210 @@ const run = async () => {
 };
 run().catch(console.dir);
 
-// ==========================================
-// CUSTOM MIDDLEWARES (RBAC & AUTH)
-// ==========================================
-const verifyToken = (req, res, next) => {
-  const authHeader = req.headers.authorization;
-  if (!authHeader || !authHeader.startsWith("Bearer ")) {
-    return res.status(401).send({ message: "Unauthorized access" });
-  }
-  const token = authHeader.split(" ")[1];
+// const verifyToken = (req, res, next) => {
+//   const authHeader = req.headers.authorization;
+//   if (!authHeader || !authHeader.startsWith("Bearer ")) {
+//     return res.status(401).send({ message: "Unauthorized access" });
+//   }
+//   const token = authHeader.split(" ")[1];
 
-  jwt.verify(token, jwtSecret, (err, decoded) => {
-    if (err) {
-      return res.status(403).send({ message: "Forbidden access" });
-    }
-    req.decoded = decoded;
-    next();
-  });
-};
+//   jwt.verify(token, jwtSecret, (err, decoded) => {
+//     if (err) {
+//       return res.status(403).send({ message: "Forbidden access" });
+//     }
+//     req.decoded = decoded;
+//     next();
+//   });
+// };
 
-const verifyRole = (roles) => {
-  return (req, res, next) => {
-    const userRole = req.decoded.role;
-    if (!roles.includes(userRole)) {
-      return res
-        .status(403)
-        .send({ message: "Forbidden: You do not have permission" });
-    }
-    next();
-  };
-};
+// const verifyRole = (roles) => {
+//   return (req, res, next) => {
+//     const userRole = req.decoded.role;
+//     if (!roles.includes(userRole)) {
+//       return res
+//         .status(403)
+//         .send({ message: "Forbidden: You do not have permission" });
+//     }
+//     next();
+//   };
+// };
 
-// ==========================================
-// API ENDPOINTS
-// ==========================================
+// app.get("/", (req, res) => {
+//   res.send("Fable Ebook Platform Server is running...");
+// });
 
-// Base Route
-app.get("/", (req, res) => {
-  res.send("Fable Ebook Platform Server is running...");
-});
+// app.post("/api/auth/register", async (req, res) => {
+//   try {
+//     const { name, email, password, role } = req.body;
+//     const existingUser = await usersCollection.findOne({ email });
+//     if (existingUser) {
+//       return res.status(400).send({ message: "Email already exists" });
+//     }
 
-// Auth APIs
-app.post("/api/auth/register", async (req, res) => {
-  try {
-    const { name, email, password, role } = req.body;
-    const existingUser = await usersCollection.findOne({ email });
-    if (existingUser) {
-      return res.status(400).send({ message: "Email already exists" });
-    }
+//     const hashedPassword = await bcrypt.hash(password, 10);
+//     const newUser = {
+//       name,
+//       email,
+//       password: hashedPassword,
+//       role: role || "Reader",
+//       createdAt: new Date(),
+//     };
+//     const result = await usersCollection.insertOne(newUser);
 
-    const hashedPassword = await bcrypt.hash(password, 10);
-    const newUser = {
-      name,
-      email,
-      password: hashedPassword,
-      role: role || "Reader",
-      createdAt: new Date(),
-    };
-    const result = await usersCollection.insertOne(newUser);
+//     const token = jwt.sign(
+//       { id: result.insertedId, email, role: newUser.role },
+//       jwtSecret,
+//       { expiresIn: "7d" },
+//     );
+//     res.status(201).send({ token, user: { name, email, role: newUser.role } });
+//   } catch (error) {
+//     res.status(500).send({ message: error.message });
+//   }
+// });
 
-    const token = jwt.sign(
-      { id: result.insertedId, email, role: newUser.role },
-      jwtSecret,
-      { expiresIn: "7d" },
-    );
-    res.status(201).send({ token, user: { name, email, role: newUser.role } });
-  } catch (error) {
-    res.status(500).send({ message: error.message });
-  }
-});
+// app.post("/api/auth/login", async (req, res) => {
+//   try {
+//     const { email, password } = req.body;
+//     const user = await usersCollection.findOne({ email });
+//     if (!user) {
+//       return res.status(404).send({ message: "User not found" });
+//     }
 
-app.post("/api/auth/login", async (req, res) => {
-  try {
-    const { email, password } = req.body;
-    const user = await usersCollection.findOne({ email });
-    if (!user) {
-      return res.status(404).send({ message: "User not found" });
-    }
+//     const isPasswordValid = await bcrypt.compare(password, user.password);
+//     if (!isPasswordValid) {
+//       return res.status(401).send({ message: "Invalid credentials" });
+//     }
 
-    const isPasswordValid = await bcrypt.compare(password, user.password);
-    if (!isPasswordValid) {
-      return res.status(401).send({ message: "Invalid credentials" });
-    }
+//     const token = jwt.sign(
+//       { id: user._id, email: user.email, role: user.role },
+//       jwtSecret,
+//       { expiresIn: "7d" },
+//     );
+//     res.send({
+//       token,
+//       user: { name: user.name, email: user.email, role: user.role },
+//     });
+//   } catch (error) {
+//     res.status(500).send({ message: error.message });
+//   }
+// });
 
-    const token = jwt.sign(
-      { id: user._id, email: user.email, role: user.role },
-      jwtSecret,
-      { expiresIn: "7d" },
-    );
-    res.send({
-      token,
-      user: { name: user.name, email: user.email, role: user.role },
-    });
-  } catch (error) {
-    res.status(500).send({ message: error.message });
-  }
-});
+// app.post(
+//   "/api/ebooks",
+//   verifyToken,
+//   verifyRole(["Writer", "Admin"]),
+//   async (req, res) => {
+//     try {
+//       const bookData = req.body;
+//       const result = await booksCollection.insertOne(bookData);
+//       res.status(201).send(result);
+//     } catch (error) {
+//       res.status(500).send({ message: error.message });
+//     }
+//   },
+// );
 
-// Ebooks APIs
-app.post(
-  "/api/ebooks",
-  verifyToken,
-  verifyRole(["Writer", "Admin"]),
-  async (req, res) => {
-    try {
-      const bookData = req.body;
-      const result = await booksCollection.insertOne(bookData);
-      res.status(201).send(result);
-    } catch (error) {
-      res.status(500).send({ message: error.message });
-    }
-  },
-);
+// app.get("/api/ebooks", async (req, res) => {
+//   try {
+//     const result = await booksCollection.find({}).toArray();
+//     res.send(result);
+//   } catch (error) {
+//     res.status(500).send({ message: error.message });
+//   }
+// });
 
-app.get("/api/ebooks", async (req, res) => {
-  try {
-    const result = await booksCollection.find({}).toArray();
-    res.send(result);
-  } catch (error) {
-    res.status(500).send({ message: error.message });
-  }
-});
+// app.get("/api/ebooks/:id", async (req, res) => {
+//   try {
+//     const id = req.params.id;
+//     const query = { _id: new ObjectId(id) };
+//     const result = await booksCollection.findOne(query);
+//     if (!result) {
+//       return res.status(404).send({ message: "Ebook not found" });
+//     }
+//     res.send(result);
+//   } catch (error) {
+//     res.status(500).send({ message: error.message });
+//   }
+// });
 
-app.get("/api/ebooks/:id", async (req, res) => {
-  try {
-    const id = req.params.id;
-    const query = { _id: new ObjectId(id) };
-    const result = await booksCollection.findOne(query);
-    if (!result) {
-      return res.status(404).send({ message: "Ebook not found" });
-    }
-    res.send(result);
-  } catch (error) {
-    res.status(500).send({ message: error.message });
-  }
-});
+// app.post(
+//   "/api/upload-image",
+//   verifyToken,
+//   verifyRole(["Writer", "Admin"]),
+//   upload.single("image"),
+//   async (req, res) => {
+//     try {
+//       if (!req.file) {
+//         return res.status(400).send({ message: "No image file provided" });
+//       }
 
-// Image Upload API (imgBB Integration)
-app.post(
-  "/api/upload-image",
-  verifyToken,
-  verifyRole(["Writer", "Admin"]),
-  upload.single("image"),
-  async (req, res) => {
-    try {
-      if (!req.file) {
-        return res.status(400).send({ message: "No image file provided" });
-      }
+//       const form = new FormData();
+//       form.append("image", req.file.buffer.toString("base64"));
 
-      const form = new FormData();
-      form.append("image", req.file.buffer.toString("base64"));
+//       const imgbbResponse = await axios.post(
+//         `https://api.imgbb.com/1/upload?key=${process.env.IMGBB_API_KEY}`,
+//         form,
+//         { headers: form.getHeaders() },
+//       );
 
-      const imgbbResponse = await axios.post(
-        `https://api.imgbb.com/1/upload?key=${process.env.IMGBB_API_KEY}`,
-        form,
-        { headers: form.getHeaders() },
-      );
+//       res.send({ imageUrl: imgbbResponse.data.data.url });
+//     } catch (error) {
+//       res.status(500).send({ message: error.message });
+//     }
+//   },
+// );
 
-      res.send({ imageUrl: imgbbResponse.data.data.url });
-    } catch (error) {
-      res.status(500).send({ message: error.message });
-    }
-  },
-);
+// app.post("/api/create-checkout-session", verifyToken, async (req, res) => {
+//   try {
+//     const { bookId } = req.body;
+//     const userEmail = req.decoded.email;
+//     const userId = req.decoded.id;
 
-// ==========================================
-// STRIPE PAYMENT GATEWAY INTEGRATION
-// ==========================================
+//     const book = await booksCollection.findOne({ _id: new ObjectId(bookId) });
+//     if (!book) {
+//       return res.status(404).send({ message: "Ebook not found" });
+//     }
 
-// Create Checkout Session
-app.post("/api/create-checkout-session", verifyToken, async (req, res) => {
-  try {
-    const { bookId } = req.body;
-    const userEmail = req.decoded.email;
-    const userId = req.decoded.id;
+//     const alreadyPurchased = await ordersCollection.findOne({ userId, bookId });
+//     if (alreadyPurchased) {
+//       return res
+//         .status(400)
+//         .send({ message: "You have already purchased this ebook" });
+//     }
 
-    // ডাটাবেজ থেকে বইয়ের প্রাইস ও টাইটেল যাচাই করুন
-    const book = await booksCollection.findOne({ _id: new ObjectId(bookId) });
-    if (!book) {
-      return res.status(404).send({ message: "Ebook not found" });
-    }
+//     const session = await stripe.checkout.sessions.create({
+//       payment_method_types: ["card"],
+//       line_items: [
+//         {
+//           price_data: {
+//             currency: "usd",
+//             product_data: {
+//               name: book.title,
+//               description: book.description || `Purchase ${book.title}`,
+//               images: book.image ? [book.image] : [],
+//             },
+//             unit_amount: Math.round(book.price * 100), // সেন্টে কনভার্ট (যেমন: $14.99 -> 1499)
+//           },
+//           quantity: 1,
+//         },
+//       ],
+//       mode: "payment",
+//       success_url: `${process.env.CLIENT_URL}/dashboard/library?success=true`,
+//       cancel_url: `${process.env.CLIENT_URL}/ebook/${bookId}?canceled=true`,
+//       metadata: {
+//         userId: userId,
+//         userEmail: userEmail,
+//         bookId: bookId,
+//         bookTitle: book.title,
+//         price: book.price.toString(),
+//       },
+//     });
 
-    // অলরেডি কেনা আছে কি না চেক করুন (Optional but secure)
-    const alreadyPurchased = await ordersCollection.findOne({ userId, bookId });
-    if (alreadyPurchased) {
-      return res
-        .status(400)
-        .send({ message: "You have already purchased this ebook" });
-    }
-
-    const session = await stripe.checkout.sessions.create({
-      payment_method_types: ["card"],
-      line_items: [
-        {
-          price_data: {
-            currency: "usd",
-            product_data: {
-              name: book.title,
-              description: book.description || `Purchase ${book.title}`,
-              images: book.image ? [book.image] : [],
-            },
-            unit_amount: Math.round(book.price * 100), // সেন্টে কনভার্ট (যেমন: $14.99 -> 1499)
-          },
-          quantity: 1,
-        },
-      ],
-      mode: "payment",
-      success_url: `${process.env.CLIENT_URL}/dashboard/library?success=true`,
-      cancel_url: `${process.env.CLIENT_URL}/ebook/${bookId}?canceled=true`,
-      metadata: {
-        userId: userId,
-        userEmail: userEmail,
-        bookId: bookId,
-        bookTitle: book.title,
-        price: book.price.toString(),
-      },
-    });
-
-    res.send({ id: session.id, url: session.url });
-  } catch (error) {
-    res.status(500).send({ message: error.message });
-  }
-});
+//     res.send({ id: session.id, url: session.url });
+//   } catch (error) {
+//     res.status(500).send({ message: error.message });
+//   }
+// });
 
 // app.get("/api/my-library", verifyToken, async (req, res) => {
 //   try {
